@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Internal Session Chat</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #e2e2e2; display: flex; justify-content: center; padding: 40px; }
+        .container { width: 450px; background: #16213e; padding: 20px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        h2 { text-align: center; color: #4ecca3; font-size: 1.2rem; }
+        
+        #chatDisplay { height: 300px; overflow-y: auto; background: #0f3460; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #1a1a2e; }
+        .msg-row { display: flex; justify-content: space-between; align-items: center; background: #1a1a2e; padding: 8px; margin-bottom: 8px; border-radius: 6px; animation: fadeIn 0.3s; }
+        
+        .input-area { display: flex; gap: 8px; }
+        input { flex: 1; padding: 10px; border-radius: 4px; border: none; background: #e2e2e2; color: #1a1a2e; }
+        
+        button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .send-btn { background: #4ecca3; color: #1a1a2e; }
+        .del-btn { background: #e94560; color: white; padding: 4px 8px; font-size: 11px; }
+        
+        .hint { font-size: 11px; color: #95a5a6; margin-top: 10px; text-align: center; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Session Chat (Internal)</h2>
+    <div id="chatDisplay"></div>
+    
+    <div class="input-area">
+        <input type="text" id="messageInput" placeholder="Write a message...">
+        <button class="send-btn" onclick="saveMessage()">Send</button>
+    </div>
+    
+    <p class="hint">Everything clears automatically when you close this tab.</p>
+</div>
+
+<script>
+    const chatDisplay = document.getElementById('chatDisplay');
+    const messageInput = document.getElementById('messageInput');
+
+    // Load messages from Session Storage on startup
+    window.onload = () => {
+        renderChat();
+    };
+
+    function saveMessage() {
+        const text = messageInput.value;
+        if (!text) return;
+
+        // Get existing messages or start new array
+        const chatHistory = JSON.parse(sessionStorage.getItem('myChat')) || [];
+        
+        // Add new message with a unique ID
+        const newMsg = { id: Date.now(), text: text };
+        chatHistory.push(newMsg);
+
+        // Save back to Session Storage
+        sessionStorage.setItem('myChat', JSON.stringify(chatHistory));
+        
+        messageInput.value = "";
+        renderChat();
+    }
+
+    function renderChat() {
+        const chatHistory = JSON.parse(sessionStorage.getItem('myChat')) || [];
+        chatDisplay.innerHTML = "";
+
+        chatHistory.forEach(msg => {
+            const div = document.createElement('div');
+            div.className = "msg-row";
+            div.innerHTML = `
+                <span>${msg.text}</span>
+                <button class="del-btn" onclick="deleteMessage(${msg.id})">Delete</button>
+            `;
+            chatDisplay.appendChild(div);
+        });
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    function deleteMessage(id) {
+        let chatHistory = JSON.parse(sessionStorage.getItem('myChat')) || [];
+        // Filter out the message with that ID
+        chatHistory = chatHistory.filter(msg => msg.id !== id);
+        sessionStorage.setItem('myChat', JSON.stringify(chatHistory));
+        renderChat();
+    }
+
+    // Allow "Enter" key to send
+    messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") saveMessage();
+    });
+</script>
+
+</body>
+</html>
